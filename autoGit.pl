@@ -10,7 +10,7 @@ my %opts;
 getopts('m:r:b:adcnph', \%opts);
 
 if (exists $opts{h}) {
-	print " ./gitadds.pl -m <> -r <> -b <> -[adcnph]
+	print " ./autoGit.pl -m <> -r <> -b <> -[adcnph]
 
 Options:
 --------
@@ -30,8 +30,9 @@ Options:
 my @gitinfo = `git status`;
 
 my $go = 0;
+my $unmerged = 0;
 
-my (@mod, @del, @new);
+my (@mod, @del, @new, @unm);
 
 foreach my $ln (@gitinfo) {
    if ($ln =~ /Changes not staged for commit:/
@@ -49,6 +50,14 @@ foreach my $ln (@gitinfo) {
 			push @new, $1;
       }
    }
+	if ($ln =~ /Unmerged paths:/) {
+		$unmerged = 1;
+	}
+	if ($unmerged == 1) {
+		if ($ln =~ /\smodified:\s+(.+)$/) {
+			push @unm, $1;
+		}
+	}
 }
 
 print "Files Modified: ".scalar(@mod)."\n git add ";
@@ -62,6 +71,12 @@ foreach (@del) {
 print "\n\nNew Files: ".scalar(@new)."\n git add ";
 foreach (@new) {
    print $_." ";
+}
+if (scalar @unm > 0) {
+	print "\n\nUnmegred Files: ".scalar(@unm)."\n ";
+	foreach (@unm) {
+		print $_." ";
+	}
 }
 print "\n\n";
 
@@ -99,8 +114,6 @@ if (exists $opts{c}) {
 	print "\nCommiting changes...\n";
 	if (!exists $opts{m}) {
 		$opts{m} = "Auto-Commit ".localtime;
-	} else {
-		$opts{m} .= " - Auto-Commit - ".localtime;
 	}
 	print " - Using commit message: ".$opts{m}."\n\n";
 	system('git commit -m "'.$opts{m}.'"');
