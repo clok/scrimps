@@ -127,7 +127,7 @@ if (exists $opts{p}) {
 	if (!exists $opts{b}) {
 		my @gitbranch = `git branch`;
 		foreach (@gitbranch) {
-			if ($_ =~ /^\*\s(\w+)$/) {
+			if ($_ =~ /^\*\s(.*)$/) {
 				$opts{b} = $1;
 			}
 		}
