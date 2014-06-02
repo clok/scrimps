@@ -3,32 +3,6 @@
 use strict;
 use warnings;
 
-use Getopt::Std;
-use Data::Dumper;
-
-my %opts;
-
-# Options
-getopts( 'm:r:b:adcnph', \%opts );
-
-if ( exists $opts{h} ) {
-  print " ./gitadds.pl -m <> -r <> -b <> -[adcnph]
-
-Options:
---------
- -m <Commit Message>
- -r <remote repo>
- -b <branch>
- -a Add modified files
- -d Remove Deleted Files
- -n Add New Files
- -c Commit Changes
- -p push
- -h Display this help
-";
-  exit;
-}
-
 my @branches;
 
 for my $ln (`git branch -a`) {
