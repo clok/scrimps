@@ -5,6 +5,8 @@ use warnings;
 
 use Getopt::Std;
 
+use Data::Dumper;
+
 my %opts;
 
 # Options
@@ -33,24 +35,42 @@ my @gitinfo = `git status -s`;
 my $go       = 0;
 my $unmerged = 0;
 
-my ( @mod, @del, @new, @unm );
+my ( @mod, @del, @new, @unm, $staged );
 
 for my $ln (@gitinfo) {
-  if ( $ln =~ /^\s*([\w\?]{1,2})\s(.+)$/ ) {
-    my $switch = $1;
-    my $file   = $2;
+  chomp $ln;
+  my @flags = split( //, substr( $ln, 0, 2 ) );
+  my $file = substr( $ln, 3, length $ln ) . "\n";
+  chomp $file;
 
-    if ( $switch eq 'M' ) {
+  if ( $flags[0] ne ' ' && $flags[0] ne '?' ) {
+    $staged->{total}++;
+    if ( $flags[0] eq 'M' ) {
+      push @{ $staged->{mod} }, $file;
+    }
+    elsif ( $flags[0] eq 'D' ) {
+      push @{ $staged->{del} }, $file;
+    }
+    elsif ( $flags[0] eq 'A' ) {
+      push @{ $staged->{new} }, $file;
+    }
+    else {
+      print "WARN: Unknown switch flag ($flags[1]) for file: $file\n";
+    }
+  }
+
+  if ( $flags[1] ne ' ' ) {
+    if ( $flags[1] eq 'M' ) {
       push @mod, $file;
     }
-    elsif ( $switch eq 'D' ) {
+    elsif ( $flags[1] eq 'D' ) {
       push @del, $file;
     }
-    elsif ( $switch eq '??' ) {
+    elsif ( $flags[1] eq '?' ) {
       push @new, $file;
     }
     else {
-      print "WARN: Unknown switch flag ($switch) for file: $file\n";
+      print "WARN: Unknown switch flag ($flags[1]) for file: $file\n";
     }
   }
 }
@@ -74,6 +94,20 @@ if ( scalar @unm > 0 ) {
   }
 }
 print "\n\n";
+
+if ( $staged->{total} ) {
+  print "Files Staged for Commit: " . $staged->{total} . "\n";
+  print " -- Modified: " . ( join( ' ', @{ $staged->{mod} } ) ) . "\n"
+    if exists $staged->{mod};
+  print " -- Deleted: " . ( join( ' ', @{ $staged->{del} } ) ) . "\n"
+    if exists $staged->{del};
+  print " -- New: " . ( join( ' ', @{ $staged->{new} } ) ) . "\n"
+    if exists $staged->{new};
+  print "\n";
+}
+else {
+  print "No files staged for commit.\n\n";
+}
 
 if ( exists $opts{a} ) {
   print "Adding modified files...";
