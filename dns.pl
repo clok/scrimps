@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Net::DNS;
+use Data::Dumper;
 
 my $url = $ARGV[0];
 
@@ -29,4 +30,15 @@ if ($query) {
 }
 else {
 	warn "Nameserver query failed: ", $res->errorstring, "\n";
+}
+
+$query = $res->query($url, "MX");
+
+if ($query) {
+	foreach my $rr (grep { $_->type eq 'MX' } $query->answer) {
+		print "MX-Record Exchange: ".$rr->exchange, "\n";
+	}
+}
+else {
+	warn "MX-Record query failed: ", $res->errorstring, "\n";
 }
