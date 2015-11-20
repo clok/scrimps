@@ -1,0 +1,10 @@
+---
+- name: UserMap
+  hosts: 20
+  hours: 4
+  per_day: 1
+- name: LogTran
+  hosts: 4
+  hours: 14
+  per_day: 1
+
