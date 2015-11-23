@@ -15,11 +15,11 @@ to_app_key = ''
 from_dog = Dogapi::Client.new(from_api_key, from_app_key)
 to_dog = Dogapi::Client.new(to_api_key, to_app_key)
 
-dash_id = ''
+dash_id = '83139'
 data = from_dog.get_dashboard(dash_id)
 
-title = "System Overview"
-description = "Overview of key system metrics"
+title = "RabbitMQ Clusters"
+description = "Overview of RabbitMQ performance"
 graphs = data[1]['dash']['graphs']
 template_variables = data[1]['dash']['template_variables']
 

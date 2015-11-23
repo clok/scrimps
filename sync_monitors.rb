@@ -4,36 +4,39 @@
 require 'rubygems'
 require 'dogapi'
 
-sc_api_key = ''
-sc_app_key = ''
-tn_api_key = ''
-tn_app_key = ''
+# Account to sync from (Synctree)
+from_api_key = ''
+from_app_key = ''
 
-sc_dog = Dogapi::Client.new(sc_api_key, sc_app_key)
-tn_dog = Dogapi::Client.new(tn_api_key, tn_app_key)
+# Account to sync to
+to_api_key = ''
+to_app_key = ''
 
-sc_data = sc_dog.get_all_monitors()
-tn_data = tn_dog.get_all_monitors()
+from_dog = Dogapi::Client.new(from_api_key, from_app_key)
+to_dog = Dogapi::Client.new(to_api_key, to_app_key)
 
-sc_monitors = {}
-tn_monitors = {}
+from_data = from_dog.get_all_monitors()
+to_data = to_dog.get_all_monitors()
 
-sc_data[1].each do |m|
-  sc_monitors[m['name']] = m
+from_monitors = {}
+to_monitors = {}
+
+from_data[1].each do |m|
+  from_monitors[m['name']] = m
 end
 
-tn_data[1].each do |m|
-  tn_monitors[m['name']] = m
+to_data[1].each do |m|
+  to_monitors[m['name']] = m
 end
 
-sc_monitors.keys.each do |m|
-  unless tn_monitors[m] ||  m =~ /Rabbit/
+from_monitors.keys.each do |m|
+  unless to_monitors[m] # || m =~ /Rabbit/
     puts "Creating: #{m}"
-    ret = tn_dog.monitor(sc_monitors[m]['type'], sc_monitors[m]['query'], name: m, message: sc_monitors[m]['message'])
-    if ret[0] == 200
+    ret = to_dog.monitor(from_monitors[m]['type'], from_monitors[m]['query'], name: m, message: from_monitors[m]['message'])
+    if ret[0] == '200'
       puts "Monitor created."
     else
-      puts "Failed to create monitor."
+      puts "Failed to create monitor. Returned: #{ret}"
     end
   else
     puts "Skipping: #{m}"
