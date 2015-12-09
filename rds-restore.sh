@@ -69,6 +69,14 @@ do
 						sg_ids_csv="$2"
 						shift
 						;;
+				--hosted-zone-id)
+						hosted_zone_id="$2"
+						shift
+						;;
+				--dns-record)
+						dns_record="$2"
+						shift
+						;;
 				*)
             # unknown option
 						info "Unknown option '$key'"
@@ -77,6 +85,9 @@ do
 		shift
 done
 
+gen_dns_batch_filename() {
+		echo "/tmp/${hosted_zone_id}-${dns_record}.json"
+}
 
 gen_instance_name() {
 		echo "$instance_basename-`date +'%Y-%m-%d-%H%M%S'`"
@@ -118,6 +129,33 @@ update_instance_parameter_and_security_groups() {
 
 reboot_instance() {
 		cmd="aws rds reboot-db-instance --db-instance-identifier $instance_name"
+		info "Executing: $cmd"
+		eval $cmd
+}
+
+update_dns() {
+		batch_filename="$(gen_dns_batch_filename)"
+		cat <<EOF > $batch_filename
+{
+  "Comment": "Automated update of $dns_record to $endpoint",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "$dns_record",
+        "Type": "CNAME",
+        "TTL": 60,
+        "ResourceRecords": [
+          {
+            "Value": "$endpoint"
+          }
+        ]
+      }
+    }
+  ]
+}
+EOF
+		cmd="aws route53 change-resource-record-sets --hosted-zone-id $hosted_zone_id --change-batch file://$batch_filename"
 		info "Executing: $cmd"
 		eval $cmd
 }
@@ -180,3 +218,13 @@ poll_status
 # Get DNS Name
 endpoint="$(get_endpoint)"
 info "Ready to update DNS records with: $endpoint"
+
+if [[ ! -z "$dns_record" ]]
+then
+		info "Updating DNS for $dns_record"
+		update_dns
+fi
+
+info "Process complete!"
+
+exit 0
