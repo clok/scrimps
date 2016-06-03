@@ -7,7 +7,7 @@ def opts
   @opts ||= OpenStruct.new(
     verbose: false,
     region: 'us-east-1',
-    aws_profile: 'conversionlogic',
+    aws_profile: 'default',
     start_time: (Date.today - 2).strftime('%Y-%m-%dT00:00:00'),
     end_time: (Date.today - 1).strftime('%Y-%m-%dT00:00:00')
   )
