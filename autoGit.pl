@@ -54,11 +54,14 @@ for my $ln (@gitinfo) {
     elsif ( $flags[0] eq 'A' ) {
       push @{ $staged->{new} }, $file;
     }
+    elsif ( $flags[0] eq 'R' ) {
+      push @{ $staged->{ren} }, $file;
+    }
     elsif ( $flags[0] eq 'U' ) {
       # do nothing
     }
     else {
-      print "WARN: Unknown switch flag ($flags[1]) for file: $file\n";
+      print "WARN: Unknown switch flag ($flags[0]) for file: $file\n";
     }
   }
 
@@ -105,6 +108,8 @@ if ( $staged->{total} ) {
   print "Files Staged for Commit: " . $staged->{total} . "\n";
   print " -- Modified: " . ( join( ' ', @{ $staged->{mod} } ) ) . "\n"
     if exists $staged->{mod};
+  print " -- Renamed: " . ( join( ' | ', @{ $staged->{ren} } ) ) . "\n"
+    if exists $staged->{ren};
   print " -- Deleted: " . ( join( ' ', @{ $staged->{del} } ) ) . "\n"
     if exists $staged->{del};
   print " -- New: " . ( join( ' ', @{ $staged->{new} } ) ) . "\n"
