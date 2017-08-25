@@ -60,6 +60,9 @@ for my $ln (@gitinfo) {
     elsif ( $flags[0] eq 'U' ) {
       # do nothing
     }
+    elsif ( $flags[0] eq 'T' ) {
+      push @{ $staged->{mod} }, $file;
+    }
     else {
       print "WARN: Unknown switch flag ($flags[0]) for file: $file\n";
     }
@@ -77,6 +80,9 @@ for my $ln (@gitinfo) {
     }
     elsif ( $flags[1] eq 'U' ) {
       push @unm, $file;
+    }
+    elsif ( $flags[1] eq 'T' ) {
+      push @mod, $file;
     }
     else {
       print "WARN: Unknown switch flag ($flags[1]) for file: $file\n";
