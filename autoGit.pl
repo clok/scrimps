@@ -10,7 +10,7 @@ use Data::Dumper;
 my %opts;
 
 # Options
-getopts( 'm:r:b:adcnph', \%opts );
+getopts( 'm:r:b:adcnpsh', \%opts );
 
 if ( exists $opts{h} ) {
   print " ./gitadds.pl -m <> -r <> -b <> -[adcnph]
@@ -24,7 +24,8 @@ Options:
  -d Remove Deleted Files
  -n Add New Files
  -c Commit Changes
- -p push
+ -p Push to remote
+ -s no-verfiy (skip)
  -h Display this help
 ";
   exit;
@@ -35,10 +36,19 @@ my @gitinfo = `git status -s`;
 my $go       = 0;
 my $unmerged = 0;
 
-my ( @mod, @del, @new, @unm, $staged );
+my ( @mod, @del, @new, @unm, @moved, $staged );
 
 for my $ln (@gitinfo) {
   chomp $ln;
+  if ( substr( $ln, 0, 2 ) eq 'RM') {
+    my $movedFile = substr( $ln, 3, length $ln );
+    my @renamedFiles = split( /\s->\s/, substr( $ln, 3, length $ln ) );
+    push @del, $renamedFiles[0];
+    push @new, $renamedFiles[1];
+    push @moved, $movedFile;
+    next;
+  }
+
   my @flags = split( //, substr( $ln, 0, 2 ) );
   my $file = substr( $ln, 3, length $ln ) . "\n";
   chomp $file;
@@ -102,6 +112,10 @@ print "\n\nNew Files: " . scalar(@new) . "\n git add ";
 foreach (@new) {
   print $_. " ";
 }
+print "\n\nMoved Files: " . scalar(@moved) . "\n";
+foreach (@moved) {
+  print $_. " ";
+}
 if ( scalar @unm ) {
   print "\n\nUnmegred Files: " . scalar(@unm) . "\n ";
   foreach (@unm) {
@@ -157,12 +171,13 @@ if ( exists $opts{d} ) {
 }
 
 if ( exists $opts{c} ) {
-  print "\nCommiting changes...\n";
-  if ( !exists $opts{m} ) {
-    $opts{m} = "Auto-Commit " . localtime;
+  if ( !exists $opts{m} || !length $opts{m} ) {
+    print "Commit message required when committing code (-c). Use -m flag to add a message.\n";
+    exit;
   }
+  print "\nCommiting changes...\n";
   print " - Using commit message: " . $opts{m} . "\n\n";
-  system( 'git commit -m "' . $opts{m} . '"' );
+  system( 'git commit -s -m "' . $opts{m} . '"' );
 }
 
 if ( exists $opts{p} ) {
@@ -180,6 +195,12 @@ if ( exists $opts{p} ) {
   }
   print " - Using Remote: " . $opts{r} . "\n";
   print " - Using Branch: " . $opts{b} . "\n";
-  print 'git push -u ' . $opts{r} . ' ' . $opts{b} . "\n\n";
-  system( 'git push -u ' . $opts{r} . ' ' . $opts{b} );
+
+  if ( exists $opts{s} ) {
+    print 'git push -u --no-verify ' . $opts{r} . ' ' . $opts{b} . "\n\n";
+    system( 'git push -u --no-verify ' . $opts{r} . ' ' . $opts{b} );
+  } else {
+    print 'git push -u ' . $opts{r} . ' ' . $opts{b} . "\n\n";
+    system( 'git push -u ' . $opts{r} . ' ' . $opts{b} );
+  }
 }
