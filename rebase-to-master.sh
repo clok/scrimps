@@ -11,6 +11,15 @@ red="\e[31m"
 green="\e[32m"
 blue="\e[34m"
 
+bold="\e[1m"
+dim="\e[2m"
+underline="\e[4m"
+blink="\e[5m"
+reset="\e[0m"
+red="\e[31m"
+green="\e[32m"
+blue="\e[34m"
+
 h1() {
   printf "\n${bold}${underline}%s${reset}" "$(echo "$@" | sed '/./,$!d')"
 }
@@ -39,6 +48,11 @@ error() {
   printf "${red}${bold}✖ %s${reset}\n" "$(echo "$@" | sed '/./,$!d')"
 }
 
+if [[ "$1" == "" ]]; then
+  error "please provide a branch as first argument"
+  exit 1
+fi
+
 runCommand() {
   command="$1"
   info "$1"
@@ -60,17 +74,12 @@ runCommand() {
   fi
 }
 
-runCommand "git gc"
-runCommand "git prune"
-runCommand "git fetch --prune"
+BRANCH="$1"
 
-if [ "$(git branch -vv | grep ': gone]' | awk '{print $1}' | wc -l | tr -d ' ')" != "0" ]; then
-  note "Pruning $(git branch -vv | grep ': gone]' | awk '{print $1}' | wc -l | tr -d ' ') branches that no longer exist on origin"
-  for branch in $(git branch -vv | grep ': gone]' | awk '{print $1}'); do
-    runCommand "git branch -D $branch";
-  done
-else
-  note "No branches found to prune"
-fi
+runCommand "git checkout master"
+runCommand "git pull"
+runCommand "git checkout $BRANCH"
+runCommand "git rebase master"
 
-runCommand "git fetch --tags"
+success "$BRANCH has been rebased"
+note "Run 'git push -u -f origin $BRANCH' to push to remote"
