@@ -11,6 +11,15 @@ red="\e[31m"
 green="\e[32m"
 blue="\e[34m"
 
+bold="\e[1m"
+dim="\e[2m"
+underline="\e[4m"
+blink="\e[5m"
+reset="\e[0m"
+red="\e[31m"
+green="\e[32m"
+blue="\e[34m"
+
 h1() {
   printf "\n${bold}${underline}%s${reset}" "$(echo "$@" | sed '/./,$!d')"
 }
@@ -60,21 +69,16 @@ runCommand() {
   fi
 }
 
-currentBranch="$(git branch --show-current | tr -d '\n')"
-
-success "Current Branch: ${currentBranch}"
-
-runCommand "git gc"
-runCommand "git prune"
-runCommand "git fetch --prune"
-
-if [ "$(git branch -vv | grep -v "${currentBranch}" | grep ': gone]' | awk '{print $1}' | wc -l | tr -d ' ')" != "0" ]; then
-  note "Pruning $(git branch -vv | grep -v "${currentBranch}" | grep ': gone]' | awk '{print $1}' | wc -l | tr -d ' ') branches that no longer exist on origin"
-  for branch in $(git branch -vv | grep -v "${currentBranch}" | grep ': gone]' | awk '{print $1}'); do
-    runCommand "git branch -D $branch";
-  done
-else
-  note "No branches found to prune"
+BRANCH="$1"
+if [ "x${BRANCH}x" = "xx" ]; then
+  BRANCH="$(git branch --show-current | tr -d '\n')"
+  success "Current Branch: ${BRANCH}"
 fi
 
-runCommand "git fetch --tags"
+runCommand "git checkout main"
+runCommand "git pull"
+runCommand "git checkout $BRANCH"
+runCommand "git rebase main"
+
+success "$BRANCH has been rebased"
+note "Run 'git push -u -f origin $BRANCH' to push to remote"

@@ -75,6 +75,10 @@ runCommand() {
 }
 
 BRANCH="$1"
+if [ "x${BRANCH}x" = "xx" ]; then
+  BRANCH="$(git branch --show-current | tr -d '\n')"
+  success "Current Branch: ${BRANCH}"
+fi
 
 runCommand "git checkout master"
 runCommand "git pull"
